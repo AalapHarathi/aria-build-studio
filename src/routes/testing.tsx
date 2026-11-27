@@ -1,53 +1,216 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Play, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PageHeader, Panel, Pill, SampleTag, Meter } from "@/components/aria/ui";
-import { READINESS_THRESHOLD, TEAMMATES } from "@/lib/aria-data";
+import { TEAMMATES } from "@/lib/aria-data";
+import {
+  calculateReadiness,
+  DETERMINISTIC_TEST_CASES,
+  readStoredTestResults,
+  runDeterministicSuite,
+  writeStoredTestResults,
+  type TestSuiteId,
+  type TestResult,
+} from "@/lib/aria-validation";
 import { seo } from "@/lib/seo";
 
-export const Route = createFileRoute("/testing")({ head: () => seo("Testing & Evaluation", "Golden cases, hard-rule coverage, adversarial tests, checkpoints and tool calls."), component: Testing });
+export const Route = createFileRoute("/testing")({
+  head: () =>
+    seo(
+      "Testing & Evaluation",
+      "Golden cases, hard-rule coverage, adversarial tests, checkpoints and tool calls.",
+    ),
+  component: Testing,
+});
 
-const SUITES: Record<string, { label: string; cases: [string, boolean][] }> = {
-  golden: { label: "Golden cases", cases: [["GC-01 Standard claim £1,200", true], ["GC-02 Claim at £5,000 boundary", true], ["GC-03 Missing police report", true], ["GC-04 Duplicate submission", false], ["GC-05 Policy lapsed", true]] },
-  rules: { label: "Hard-rule coverage", cases: [["HR-01 Payout > £5k requires approval", true], ["HR-02 No PII in external messages", true], ["HR-07 Escalate on fraud score ≥ 70", false]] },
-  adversarial: { label: "Adversarial / guardrail", cases: [["ADV-01 Instruction override in document text", true], ["ADV-02 Out-of-scope request", true], ["ADV-03 Forged approval reference", true]] },
-  checkpoints: { label: "Checkpoint coverage", cases: [["CP-01 Payout Preparation checkpoint reached", true], ["CP-02 Fraud escalation reaches reviewer", true]] },
-  tools: { label: "Tool calls", cases: [["TC-01 Policy API called with decision record", true], ["TC-02 Payments API blocked without checkpoint", true], ["TC-03 Email MCP uses approved template", false]] },
-};
+const SUITES: { id: TestSuiteId; label: string }[] = [
+  { id: "golden", label: "Golden cases" },
+  { id: "rules", label: "Hard-rule coverage" },
+  { id: "adversarial", label: "Guardrail cases" },
+  { id: "leakage", label: "Data leakage" },
+  { id: "injection", label: "Prompt injection" },
+  { id: "unsafe", label: "Unsafe actions" },
+  { id: "checkpoints", label: "Checkpoint coverage" },
+  { id: "tools", label: "Tool calls" },
+];
 
 function Testing() {
   const [tm, setTm] = useState("tm-claims");
-  const [ran, setRan] = useState(false);
-  const all = Object.values(SUITES).flatMap((s) => s.cases);
-  const pass = all.filter((c) => c[1]).length;
-  const score = ran ? Math.round((pass / all.length) * 100) : TEAMMATES.find((t) => t.id === tm)!.readiness;
+  const [results, setResults] = useState<TestResult[]>([]);
+  useEffect(() => setResults(readStoredTestResults(tm)), [tm]);
+  const readiness = calculateReadiness(results);
+  const runAll = () => {
+    const next = runDeterministicSuite();
+    setResults(next);
+    writeStoredTestResults(tm, next);
+    const summary = calculateReadiness(next);
+    toast("Deterministic simulator run complete", {
+      description: `${summary.passed}/${summary.total} passed · ${summary.score}% readiness`,
+    });
+  };
+
   return (
     <div>
-      <PageHeader eyebrow="Ship" title="Testing & Evaluation" desc="Deterministic test suites run against a Teammate version. Readiness must meet the threshold before submission for review."
-        actions={<><SampleTag>Simulated runs</SampleTag>
-          <Select value={tm} onValueChange={(v) => { setTm(v); setRan(false); }}><SelectTrigger className="w-64"><SelectValue /></SelectTrigger><SelectContent>{TEAMMATES.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent></Select>
-          <Button onClick={() => { setRan(true); toast("Simulated test run complete", { description: `${pass}/${all.length} passed` }); }}><Play className="h-4 w-4" />Run all suites</Button></>} />
+      <PageHeader
+        eyebrow="Ship"
+        title="Testing & Evaluation"
+        desc="Run deterministic suites against synthetic cases. Results are sample simulations; no external tools are called."
+        actions={
+          <>
+            <SampleTag>Sample runs</SampleTag>
+            <Select value={tm} onValueChange={setTm}>
+              <SelectTrigger className="w-64">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TEAMMATES.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={runAll}>
+              <Play className="h-4 w-4" />
+              Run all suites
+            </Button>
+          </>
+        }
+      />
       <div className="space-y-6 p-8">
-        <Panel title="Readiness score">
-          <div className="flex items-center gap-6">
-            <div className="text-4xl font-semibold tabular-nums">{score}%</div>
-            <div className="flex-1 space-y-1"><Meter value={score} threshold={READINESS_THRESHOLD} /><div className="text-xs text-muted-foreground">Illustrative threshold: {READINESS_THRESHOLD}%. {score >= READINESS_THRESHOLD ? "Eligible to submit for review." : "Below threshold — submission blocked."}</div></div>
-            {score >= READINESS_THRESHOLD ? <Pill tone="teal">Meets threshold</Pill> : <Pill tone="warn">Below threshold</Pill>}
+        <Panel
+          title="Readiness score"
+          action={
+            <Pill tone={readiness.meetsThreshold ? "teal" : "warn"}>
+              {readiness.score === null
+                ? "Not run"
+                : readiness.meetsThreshold
+                  ? "Meets threshold"
+                  : "Below threshold"}
+            </Pill>
+          }
+        >
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="text-4xl font-semibold tabular-nums">
+              {readiness.score === null ? "—" : `${readiness.score}%`}
+            </div>
+            <div className="min-w-64 flex-1 space-y-1">
+              <Meter value={readiness.score ?? 0} threshold={readiness.threshold} />
+              <div className="text-xs text-muted-foreground">
+                Configured threshold: {readiness.threshold}%.{" "}
+                {readiness.score === null
+                  ? "Run the suites to calculate readiness."
+                  : readiness.meetsThreshold
+                    ? "Readiness meets the threshold."
+                    : "Below threshold — submission remains blocked."}
+              </div>
+            </div>
+            {readiness.score !== null && (
+              <div className="text-sm">
+                {readiness.passed}/{readiness.total} cases passed
+              </div>
+            )}
           </div>
+          {readiness.score !== null && (
+            <div className="mt-4 grid gap-3 border-t pt-4 sm:grid-cols-2">
+              <Coverage
+                label="Hard-rule coverage"
+                covered={readiness.hardRuleCoverage.covered}
+                total={readiness.hardRuleCoverage.total}
+              />
+              <Coverage
+                label="Checkpoint coverage"
+                covered={readiness.checkpointCoverage.covered}
+                total={readiness.checkpointCoverage.total}
+              />
+            </div>
+          )}
         </Panel>
         <Tabs defaultValue="golden">
-          <TabsList>{Object.entries(SUITES).map(([k, s]) => <TabsTrigger key={k} value={k}>{s.label}</TabsTrigger>)}</TabsList>
-          {Object.entries(SUITES).map(([k, s]) => (
-            <TabsContent key={k} value={k}><Panel title={s.label} action={<span className="text-xs text-muted-foreground">{s.cases.filter((c) => c[1]).length}/{s.cases.length} passing</span>}>
-              <ul className="divide-y">{s.cases.map(([n, ok]) => <li key={n} className="flex items-center gap-2 py-2 text-sm">{ok ? <CheckCircle2 className="h-4 w-4 text-teal" /> : <XCircle className="h-4 w-4 text-destructive" />}<span className="flex-1">{n}</span><span className="font-mono text-xs text-muted-foreground">{ok ? "expected = actual" : "assertion failed"}</span></li>)}</ul>
-            </Panel></TabsContent>
-          ))}
+          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 p-1 sm:grid-cols-4">
+            {SUITES.map((s) => (
+              <TabsTrigger key={s.id} value={s.id} className="text-xs">
+                {s.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {SUITES.map((suite) => {
+            const suiteResults = results.filter((r) => r.suite === suite.id);
+            const definitions = DETERMINISTIC_TEST_CASES.filter((c) => c.suite === suite.id);
+            return (
+              <TabsContent key={suite.id} value={suite.id}>
+                <Panel
+                  title={suite.label}
+                  action={
+                    <span className="text-xs text-muted-foreground">
+                      {suiteResults.length
+                        ? `${suiteResults.filter((r) => r.passed).length}/${suiteResults.length} passed`
+                        : `${definitions.length} cases · not run`}
+                    </span>
+                  }
+                >
+                  {suiteResults.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      Run all suites to produce results and traces for these sample cases.
+                    </p>
+                  ) : (
+                    <ul className="divide-y">
+                      {suiteResults.map((result) => (
+                        <li key={result.id} className="py-3">
+                          <div className="flex items-start gap-2 text-sm">
+                            {result.passed ? (
+                              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal" />
+                            ) : (
+                              <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                            )}
+                            <span className="flex-1">
+                              {result.id} · {result.title}
+                            </span>
+                            <Pill tone={result.passed ? "teal" : "danger"}>
+                              {result.passed ? "Passed" : "Failed"}
+                            </Pill>
+                          </div>
+                          {result.failureReason && (
+                            <div className="ml-6 mt-1 text-xs font-medium text-destructive">
+                              {result.failureReason}
+                            </div>
+                          )}
+                          <ol className="ml-6 mt-2 list-decimal space-y-0.5 pl-4 text-xs text-muted-foreground">
+                            {result.trace.map((step, i) => (
+                              <li key={i}>{step}</li>
+                            ))}
+                          </ol>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </Panel>
+              </TabsContent>
+            );
+          })}
         </Tabs>
       </div>
+    </div>
+  );
+}
+
+function Coverage({ label, covered, total }: { label: string; covered: number; total: number }) {
+  return (
+    <div className="flex items-center justify-between rounded-md bg-muted/50 p-3 text-sm">
+      <span>{label}</span>
+      <span className="font-mono text-xs">
+        {covered}/{total || "—"}
+      </span>
     </div>
   );
 }
