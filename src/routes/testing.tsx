@@ -13,12 +13,16 @@ import {
 } from "@/components/ui/select";
 import { PageHeader, Panel, Pill, SampleTag, Meter } from "@/components/aria/ui";
 import { TEAMMATES } from "@/lib/aria-data";
+import { INITIAL_EDGES, INITIAL_NODES } from "@/components/aria/workflow-builder";
 import {
   calculateReadiness,
   DETERMINISTIC_TEST_CASES,
   readStoredTestResults,
+  readStoredWorkflow,
   runDeterministicSuite,
+  workflowFingerprint,
   writeStoredTestResults,
+  type WorkflowSnapshot,
   type TestSuiteId,
   type TestResult,
 } from "@/lib/aria-validation";
@@ -46,14 +50,27 @@ const SUITES: { id: TestSuiteId; label: string }[] = [
 
 function Testing() {
   const [tm, setTm] = useState("tm-claims");
+  const [workflow, setWorkflow] = useState<WorkflowSnapshot>(
+    () => readStoredWorkflow("tm-claims") ?? { nodes: INITIAL_NODES, edges: INITIAL_EDGES },
+  );
   const [results, setResults] = useState<TestResult[]>([]);
-  useEffect(() => setResults(readStoredTestResults(tm)), [tm]);
-  const readiness = calculateReadiness(results);
+  useEffect(() => {
+    const stored = readStoredWorkflow(tm);
+    setWorkflow(
+      stored ??
+        (tm === "tm-claims"
+          ? { nodes: INITIAL_NODES, edges: INITIAL_EDGES }
+          : { nodes: [], edges: [] }),
+    );
+    setResults(readStoredTestResults(tm));
+  }, [tm]);
+  const fingerprint = workflowFingerprint(workflow);
+  const readiness = calculateReadiness(results, undefined, fingerprint);
   const runAll = () => {
-    const next = runDeterministicSuite();
+    const next = runDeterministicSuite(workflow);
     setResults(next);
     writeStoredTestResults(tm, next);
-    const summary = calculateReadiness(next);
+    const summary = calculateReadiness(next, undefined, fingerprint);
     toast("Deterministic simulator run complete", {
       description: `${summary.passed}/${summary.total} passed · ${summary.score}% readiness`,
     });
@@ -64,7 +81,7 @@ function Testing() {
       <PageHeader
         eyebrow="Ship"
         title="Testing & Evaluation"
-        desc="Run deterministic suites against synthetic cases. Results are sample simulations; no external tools are called."
+        desc="Run deterministic checks against the saved workflow. Unsupported controls are marked Not run; no external tools are called."
         actions={
           <>
             <SampleTag>Sample runs</SampleTag>
@@ -154,30 +171,44 @@ function Testing() {
                   action={
                     <span className="text-xs text-muted-foreground">
                       {suiteResults.length
-                        ? `${suiteResults.filter((r) => r.passed).length}/${suiteResults.length} passed`
+                        ? `${suiteResults.filter((r) => r.status === "passed").length}/${suiteResults.length} passed`
                         : `${definitions.length} cases · not run`}
                     </span>
                   }
                 >
                   {suiteResults.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
-                      Run all suites to produce results and traces for these sample cases.
+                      Run all suites to evaluate this workflow and produce traces.
                     </p>
                   ) : (
                     <ul className="divide-y">
                       {suiteResults.map((result) => (
                         <li key={result.id} className="py-3">
                           <div className="flex items-start gap-2 text-sm">
-                            {result.passed ? (
+                            {result.status === "passed" ? (
                               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal" />
-                            ) : (
+                            ) : result.status === "failed" ? (
                               <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                            ) : (
+                              <span className="mt-0.5 h-4 w-4 shrink-0 text-warning">○</span>
                             )}
                             <span className="flex-1">
                               {result.id} · {result.title}
                             </span>
-                            <Pill tone={result.passed ? "teal" : "danger"}>
-                              {result.passed ? "Passed" : "Failed"}
+                            <Pill
+                              tone={
+                                result.status === "passed"
+                                  ? "teal"
+                                  : result.status === "failed"
+                                    ? "danger"
+                                    : "warn"
+                              }
+                            >
+                              {result.status === "not-run"
+                                ? "Not run"
+                                : result.status === "passed"
+                                  ? "Passed"
+                                  : "Failed"}
                             </Pill>
                           </div>
                           {result.failureReason && (
