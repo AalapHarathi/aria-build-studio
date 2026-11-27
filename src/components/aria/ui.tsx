@@ -16,7 +16,7 @@ export function PageHeader({ eyebrow, title, desc, actions }: { eyebrow?: string
   );
 }
 
-export function Panel({ title, action, children, className }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string }) {
+export function Panel({ title, action, children, className, contentClassName }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; contentClassName?: string }) {
   return (
     <section className={cn("rounded-lg border bg-card", className)}>
       {title && (
@@ -25,7 +25,7 @@ export function Panel({ title, action, children, className }: { title?: ReactNod
           {action}
         </div>
       )}
-      <div className="p-4">{children}</div>
+      <div className={cn("p-4", contentClassName)}>{children}</div>
     </section>
   );
 }

@@ -237,8 +237,13 @@ function Overview() {
           />
         </div>
 
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(340px,1fr)]">
-          <Panel title="Teammate lifecycle" action={<SampleTag>Sample records</SampleTag>}>
+        <div className="grid items-stretch gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
+          <Panel
+            title="Teammate lifecycle"
+            action={<SampleTag>Sample records</SampleTag>}
+            className="lg:h-[420px] lg:flex lg:min-h-0 lg:flex-col"
+            contentClassName="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
+          >
             <div className="grid grid-cols-2 gap-2 md:grid-cols-3 2xl:grid-cols-6">
               {lifecycle.map(({ stage, count }) => (
                 <button
@@ -299,6 +304,8 @@ function Overview() {
             action={
               <Pill tone={workItems.length ? "warn" : "muted"}>{workItems.length} items</Pill>
             }
+            className="lg:h-[420px] lg:flex lg:min-h-0 lg:flex-col"
+            contentClassName="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
           >
             {workItems.length ? (
               <ul className="divide-y">
@@ -335,7 +342,7 @@ function Overview() {
           </Panel>
         </div>
 
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,1fr)]">
+        <div className="grid items-stretch gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)]">
           <Panel
             title="Engine health"
             action={
@@ -344,6 +351,8 @@ function Overview() {
                 Health source unavailable
               </Pill>
             }
+            className="lg:h-[460px] lg:flex lg:min-h-0 lg:flex-col"
+            contentClassName="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
           >
             <div className="grid gap-2 md:grid-cols-2 2xl:grid-cols-3">
               {ENGINES.map((engine, i) => (
@@ -395,6 +404,8 @@ function Overview() {
                 {failures.length + validationIssues.length + Number(readiness.stale)} detected
               </Pill>
             }
+            className="lg:h-[460px] lg:flex lg:min-h-0 lg:flex-col"
+            contentClassName="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
           >
             {readiness.stale && (
               <Issue
@@ -443,8 +454,13 @@ function Overview() {
           </Panel>
         </div>
 
-        <div className="grid gap-5 xl:grid-cols-2">
-          <Panel title="Recent activity" action={<SampleTag>Illustrative activity</SampleTag>}>
+        <div className="grid items-stretch gap-5 lg:grid-cols-2">
+          <Panel
+            title="Recent activity"
+            action={<SampleTag>Illustrative activity</SampleTag>}
+            className="lg:h-[320px] lg:flex lg:min-h-0 lg:flex-col"
+            contentClassName="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
+          >
             {recentActivity.length ? (
               <ol className="divide-y">
                 {recentActivity.map((event, i) => (
@@ -471,7 +487,12 @@ function Overview() {
               <Empty>No sample activity is associated with this workspace.</Empty>
             )}
           </Panel>
-          <Panel title="Workspace snapshot" action={<SampleTag>Seeded sample records</SampleTag>}>
+          <Panel
+            title="Workspace snapshot"
+            action={<SampleTag>Seeded sample records</SampleTag>}
+            className="lg:h-[320px] lg:flex lg:min-h-0 lg:flex-col"
+            contentClassName="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
+          >
             <div className="mb-3 text-sm font-medium">{scope?.name ?? "All sample workspaces"}</div>
             <div className="grid gap-2 sm:grid-cols-2">
               <Snapshot label="Teammates in scope" value={teammates.length} />
