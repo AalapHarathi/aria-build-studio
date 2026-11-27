@@ -10,33 +10,141 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ControlCentreRouteImport } from './routes/control-centre'
+import { Route as OperateRouteImport } from './routes/operate'
+import { Route as ReleasesRouteImport } from './routes/releases'
+import { Route as ReviewsRouteImport } from './routes/reviews'
+import { Route as TaskmateStudioRouteImport } from './routes/taskmate-studio'
+import { Route as TeammateStudioRouteImport } from './routes/teammate-studio'
+import { Route as TestingRouteImport } from './routes/testing'
+import { Route as CoreEngineRouteImport } from './routes/core.$engine'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ControlCentreRoute = ControlCentreRouteImport.update({
+  id: '/control-centre',
+  path: '/control-centre',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OperateRoute = OperateRouteImport.update({
+  id: '/operate',
+  path: '/operate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReleasesRoute = ReleasesRouteImport.update({
+  id: '/releases',
+  path: '/releases',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewsRoute = ReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TaskmateStudioRoute = TaskmateStudioRouteImport.update({
+  id: '/taskmate-studio',
+  path: '/taskmate-studio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeammateStudioRoute = TeammateStudioRouteImport.update({
+  id: '/teammate-studio',
+  path: '/teammate-studio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestingRoute = TestingRouteImport.update({
+  id: '/testing',
+  path: '/testing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoreEngineRoute = CoreEngineRouteImport.update({
+  id: '/core/$engine',
+  path: '/core/$engine',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/control-centre': typeof ControlCentreRoute
+  '/operate': typeof OperateRoute
+  '/releases': typeof ReleasesRoute
+  '/reviews': typeof ReviewsRoute
+  '/taskmate-studio': typeof TaskmateStudioRoute
+  '/teammate-studio': typeof TeammateStudioRoute
+  '/testing': typeof TestingRoute
+  '/core/$engine': typeof CoreEngineRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/control-centre': typeof ControlCentreRoute
+  '/operate': typeof OperateRoute
+  '/releases': typeof ReleasesRoute
+  '/reviews': typeof ReviewsRoute
+  '/taskmate-studio': typeof TaskmateStudioRoute
+  '/teammate-studio': typeof TeammateStudioRoute
+  '/testing': typeof TestingRoute
+  '/core/$engine': typeof CoreEngineRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/control-centre': typeof ControlCentreRoute
+  '/operate': typeof OperateRoute
+  '/releases': typeof ReleasesRoute
+  '/reviews': typeof ReviewsRoute
+  '/taskmate-studio': typeof TaskmateStudioRoute
+  '/teammate-studio': typeof TeammateStudioRoute
+  '/testing': typeof TestingRoute
+  '/core/$engine': typeof CoreEngineRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/control-centre'
+    | '/operate'
+    | '/releases'
+    | '/reviews'
+    | '/taskmate-studio'
+    | '/teammate-studio'
+    | '/testing'
+    | '/core/$engine'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/control-centre'
+    | '/operate'
+    | '/releases'
+    | '/reviews'
+    | '/taskmate-studio'
+    | '/teammate-studio'
+    | '/testing'
+    | '/core/$engine'
+  id:
+    | '__root__'
+    | '/'
+    | '/control-centre'
+    | '/operate'
+    | '/releases'
+    | '/reviews'
+    | '/taskmate-studio'
+    | '/teammate-studio'
+    | '/testing'
+    | '/core/$engine'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ControlCentreRoute: typeof ControlCentreRoute
+  OperateRoute: typeof OperateRoute
+  ReleasesRoute: typeof ReleasesRoute
+  ReviewsRoute: typeof ReviewsRoute
+  TaskmateStudioRoute: typeof TaskmateStudioRoute
+  TeammateStudioRoute: typeof TeammateStudioRoute
+  TestingRoute: typeof TestingRoute
+  CoreEngineRoute: typeof CoreEngineRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +156,75 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/control-centre': {
+      id: '/control-centre'
+      path: '/control-centre'
+      fullPath: '/control-centre'
+      preLoaderRoute: typeof ControlCentreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/operate': {
+      id: '/operate'
+      path: '/operate'
+      fullPath: '/operate'
+      preLoaderRoute: typeof OperateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/releases': {
+      id: '/releases'
+      path: '/releases'
+      fullPath: '/releases'
+      preLoaderRoute: typeof ReleasesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reviews': {
+      id: '/reviews'
+      path: '/reviews'
+      fullPath: '/reviews'
+      preLoaderRoute: typeof ReviewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/taskmate-studio': {
+      id: '/taskmate-studio'
+      path: '/taskmate-studio'
+      fullPath: '/taskmate-studio'
+      preLoaderRoute: typeof TaskmateStudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teammate-studio': {
+      id: '/teammate-studio'
+      path: '/teammate-studio'
+      fullPath: '/teammate-studio'
+      preLoaderRoute: typeof TeammateStudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/testing': {
+      id: '/testing'
+      path: '/testing'
+      fullPath: '/testing'
+      preLoaderRoute: typeof TestingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/core/$engine': {
+      id: '/core/$engine'
+      path: '/core/$engine'
+      fullPath: '/core/$engine'
+      preLoaderRoute: typeof CoreEngineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ControlCentreRoute: ControlCentreRoute,
+  OperateRoute: OperateRoute,
+  ReleasesRoute: ReleasesRoute,
+  ReviewsRoute: ReviewsRoute,
+  TaskmateStudioRoute: TaskmateStudioRoute,
+  TeammateStudioRoute: TeammateStudioRoute,
+  TestingRoute: TestingRoute,
+  CoreEngineRoute: CoreEngineRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
