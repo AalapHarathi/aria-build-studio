@@ -59,7 +59,7 @@
   --card-foreground: oklch(0.26 0.05 255);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.26 0.05 255);
-  --primary: oklch(0.555 0.19 266);
+  --primary: #079bbf;
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.955 0.008 255);
   --secondary-foreground: oklch(0.29 0.055 255);
@@ -71,7 +71,7 @@
   --destructive-foreground: oklch(0.99 0 0);
   --border: oklch(0.91 0.01 255);
   --input: oklch(0.89 0.012 255);
-  --ring: oklch(0.555 0.19 266);
+  --ring: #079bbf;
   --navy: oklch(0.29 0.055 255);
   --navy-foreground: oklch(0.98 0 0);
   --teal: oklch(0.64 0.13 170);
@@ -98,7 +98,7 @@
   --card-foreground: oklch(0.94 0.01 255);
   --popover: oklch(0.23 0.035 258);
   --popover-foreground: oklch(0.94 0.01 255);
-  --primary: oklch(0.65 0.17 266);
+  --primary: #35c6e8;
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.27 0.035 258);
   --secondary-foreground: oklch(0.92 0.01 255);
@@ -109,7 +109,7 @@
   --destructive: oklch(0.65 0.19 25);
   --border: oklch(0.32 0.03 258);
   --input: oklch(0.34 0.03 258);
-  --ring: oklch(0.65 0.17 266);
+  --ring: #35c6e8;
   --navy: oklch(0.85 0.04 255);
   --navy-foreground: oklch(0.2 0.04 255);
   --teal: oklch(0.7 0.13 170);
@@ -129,7 +129,9 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
+  * {
+    border-color: var(--color-border);
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);

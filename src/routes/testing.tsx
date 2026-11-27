@@ -29,6 +29,9 @@ import {
 import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/testing")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    caseId: typeof search.caseId === "string" ? search.caseId : undefined,
+  }),
   head: () =>
     seo(
       "Testing & Evaluation",
@@ -49,11 +52,15 @@ const SUITES: { id: TestSuiteId; label: string }[] = [
 ];
 
 function Testing() {
+  const { caseId } = Route.useSearch();
   const [tm, setTm] = useState("tm-claims");
   const [workflow, setWorkflow] = useState<WorkflowSnapshot>(
     () => readStoredWorkflow("tm-claims") ?? { nodes: INITIAL_NODES, edges: INITIAL_EDGES },
   );
   const [results, setResults] = useState<TestResult[]>([]);
+  const initialSuite =
+    DETERMINISTIC_TEST_CASES.find((item) => item.id === caseId)?.suite ?? "golden";
+  const [selectedSuite, setSelectedSuite] = useState<TestSuiteId>(initialSuite);
   useEffect(() => {
     const stored = readStoredWorkflow(tm);
     setWorkflow(
@@ -75,6 +82,11 @@ function Testing() {
       description: `${summary.passed}/${summary.total} passed · ${summary.score}% readiness`,
     });
   };
+  useEffect(() => {
+    if (!caseId || !results.length) return;
+    document.getElementById(`case-${caseId}`)?.scrollIntoView({ block: "center" });
+  }, [caseId, results]);
+  useEffect(() => setSelectedSuite(initialSuite), [initialSuite]);
 
   return (
     <div>
@@ -153,7 +165,10 @@ function Testing() {
             </div>
           )}
         </Panel>
-        <Tabs defaultValue="golden">
+        <Tabs
+          value={selectedSuite}
+          onValueChange={(value) => setSelectedSuite(value as TestSuiteId)}
+        >
           <TabsList className="grid h-auto w-full grid-cols-2 gap-1 p-1 sm:grid-cols-4">
             {SUITES.map((s) => (
               <TabsTrigger key={s.id} value={s.id} className="text-xs">
@@ -183,7 +198,7 @@ function Testing() {
                   ) : (
                     <ul className="divide-y">
                       {suiteResults.map((result) => (
-                        <li key={result.id} className="py-3">
+                        <li id={`case-${result.id}`} key={result.id} className="scroll-mt-24 py-3">
                           <div className="flex items-start gap-2 text-sm">
                             {result.status === "passed" ? (
                               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal" />
